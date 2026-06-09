@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Knowledge App Prototype</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 全局重置与设计语言同步 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #E5E5E5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 手机设备外壳容器（保持代码规范中的 390px 宽度） */
+        .phone-container {
+            width: 390px;
+            height: 812px; /* 采用标准黄金纵横比视口，内容支持区域内滚动 */
+            background: linear-gradient(0deg, #F5F5F5, #F5F5F5), #FFFFFF;
+            box-shadow: 0px 12px 40px rgba(0,0,0,0.15);
+            border-radius: 32px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 状态栏模拟占位 */
+        .status-bar {
+            height: 24px;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #191B23;
+            font-weight: 500;
+            z-index: 10;
+            background: #FAF8FF;
+        }
+
+        /* Header - TopAppBar 规范 */
+        .top-app-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 0px;
+            width: 390px;
+            height: 65px;
+            background: #FAF8FF;
+            border-bottom: 1px solid #C2C6D7;
+            z-index: 5;
+        }
+
+        .top-bar-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0px 16px;
+            width: 390px;
+            height: 64px;
+        }
+
+        .top-bar-left {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .icon-btn {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+            width: 34px;
+            height: 28px;
+            border-radius: 9999px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+        }
+
+        .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        /* 汉堡菜单/返回图标 */
+        .icon-menu {
+            width: 18px;
+            height: 12px;
+            border-top: 2px solid #0056C6;
+            border-bottom: 2px solid #0056C6;
+            position: relative;
+        }
+        .icon-menu::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 2px;
+            background: #0056C6;
+            top: 3px;
+        }
+
+        .icon-back {
+            width: 12px;
+            height: 12px;
+            border-left: 2px solid #0056C6;
+            border-bottom: 2px solid #0056C6;
+            transform: rotate(45deg);
+        }
+
+        .heading-1 {
+            font-weight: 700;
+            font-size: 18px;
+            line-height: 24px;
+            letter-spacing: -0.18px;
+            color: #191B23;
+        }
+
+        .user-profile {
+            width: 32px;
+            height: 32px;
+            background: #A8C0FE;
+            border-radius: 9999px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            color: #0056C6;
+            font-size: 14px;
+        }
+
+        /* 页面主体内容滚动区 */
+        .app-screen {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 24px 16px;
+            gap: 32px;
+            width: 100%;
+        }
+
+        /* 隐藏滚动条但保留功能 */
+        .app-screen::-webkit-scrollbar {
+            width: 0px;
+        }
+
+        /* 页面切换动画机制 */
+        .page {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+
+        .page.active {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ================= 主页面组件规范 ================= */
+        
+        /* 搜索输入区 */
+        .search-input-section {
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 4px 12px;
+            width: 358px;
+            height: 64px;
+            background: #FFFFFF;
+            border: 1px solid #C2C6D7;
+            box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+        }
+
+        .search-icon-left {
+            width: 18px;
+            height: 18px;
+            background: #727786;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") center/contain no-repeat;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") center/contain no-repeat;
+            margin-right: 12px;
+        }
+
+        .search-input {
+            width: 260px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            line-height: 24px;
+            color: #191B23;
+        }
+
+        .clear-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 9999px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+        }
+
+        .icon-arrow-right {
+            width: 14px;
+            height: 14px;
+            background: #727786;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 5l7 7-7 7'/%3E%3C/svg%3E") center/contain no-repeat;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 5l7 7-7 7'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+
+        /* 列表部分通用配置 */
+        .section-title {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 20px;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+            color: #424654;
+            padding: 0 8px;
+            margin-bottom: 12px;
+        }
+
+        /* 本地搜索卡片样式 */
+        .result-card {
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 16px;
+            gap: 8px;
+            width: 358px;
+            background: #FFFFFF;
+            border: 1px solid #C2C6D7;
+            box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .card-header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .heading-3 {
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 22px;
+            letter-spacing: -0.18px;
+            color: #191B23;
+            width: 90%;
+        }
+
+        .card-body-text {
+            font-size: 14px;
+            line-height: 20px;
+            color: #424654;
+        }
+
+        .card-footer {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #727786;
+            margin-top: 4px;
+        }
+
+        .icon-time {
+            width: 12px;
+            height: 12px;
+            background: #727786;
+            display: inline-block;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'/%3E%3C/svg%3E") center/contain no-repeat;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+
+        .divider {
+            width: 358px;
+            height: 1px;
+            border-top: 1px solid #C2C6D7;
+            margin: 8px 0;
+        }
+
+        /* AI结果部分样式 */
+        .ai-header-badge {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .badge-tag {
+            background: #0056C6;
+            border-radius: 2px;
+            padding: 2px 6px;
+            font-weight: 600;
+            font-size: 10px;
+            color: #FFFFFF;
+            text-transform: uppercase;
+        }
+
+        .badge-text {
+            font-weight: 600;
+            font-size: 12px;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: #0056C6;
+        }
+
+        .ai-result-card {
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            padding: 16px;
+            gap: 16px;
+            width: 358px;
+            background: #FFFFFF;
+            border: 1px solid #C2C6D7;
+            box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: cardSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .ai-result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+        }
+
+        @keyframes cardSlideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ai-icon-sparkle {
+            width: 22px;
+            height: 22px;
+            background: #0056C6;
+            flex-shrink: 0;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L11 3z'/%3E%3C/svg%3E") center/contain no-repeat;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L11 3z'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+
+        .ai-card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .heading-4 {
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 22px;
+            color: #191B23;
+        }
+
+        .ai-card-text {
+            font-size: 14px;
+            line-height: 22px;
+            color: #424654;
+        }
+
+        .ai-card-meta {
+            font-style: italic;
+            font-size: 11px;
+            color: #727786;
+        }
+
+        /* 加载更多按钮 */
+        .load-more-btn {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            padding: 12px 24px;
+            width: 220px;
+            height: 44px;
+            border: 1px solid #C2C6D7;
+            border-radius: 12px;
+            background: #FFFFFF;
+            color: #0056C6;
+            font-weight: 500;
+            font-size: 15px;
+            margin: 8px auto;
+            cursor: pointer;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .load-more-btn.disabled {
+            color: #727786;
+            background: #F5F5F5;
+            border-color: #C2C6D7;
+            cursor: not-allowed;
+        }
+
+        .icon-chevron-down {
+            width: 10px;
+            height: 6px;
+            background: #0056C6;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") center/contain no-repeat;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+
+        /* 主操作按钮（底部悬浮式） */
+        .fixed-action-btn {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            gap: 12px;
+            width: 358px;
+            height: 50px;
+            background: #0056C6;
+            box-shadow: 0px 4px 12px rgba(0, 86, 198, 0.2);
+            border-radius: 12px;
+            border: none;
+            color: #FFFFFF;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+
+        /* ================= 延展页面：AI详情深入页 ================= */
+        
+        .ai-insight-section {
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 16px;
+            gap: 10px;
+            width: 358px;
+            background: rgba(45, 122, 255, 0.05);
+            border: 1px solid rgba(45, 122, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .insight-top {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+        }
+
+        .insight-badge {
+            background: #2D7AFF;
+            border-radius: 9999px;
+            padding: 4px 10px;
+            font-weight: 600;
+            font-size: 11px;
+            color: #FFFFFF;
+        }
+
+        .insight-meta {
+            font-size: 11px;
+            color: #424654;
+        }
+
+        .insight-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2D7AFF;
+        }
+
+        .article-card {
+            background: #FFFFFF;
+            border: 1px solid #C2C6D7;
+            border-radius: 12px;
+            padding: 20px 16px;
+            width: 358px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .article-title {
+            font-weight: 600;
+            font-size: 22px;
+            line-height: 30px;
+            color: #191B23;
+            letter-spacing: -0.48px;
+        }
+
+        .article-paragraph {
+            font-size: 15px;
+            line-height: 24px;
+            color: #424654;
+        }
+
+        /* 抽象占位结构图组件 */
+        .mock-diagram {
+            box-sizing: border-box;
+            width: 100%;
+            height: 160px;
+            border: 1px dashed #C2C6D7;
+            border-radius: 12px;
+            background: #FAF8FF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #727786;
+            font-size: 13px;
+            gap: 8px;
+        }
+
+        .icon-diagram {
+            width: 16px;
+            height: 16px;
+            background: #727786;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11 3.055A9.003 9.003 0 1020.945 13H11V3.055z'/%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z'/%3E%3C/svg%3E") center/contain no-repeat;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11 3.055A9.003 9.003 0 1020.945 13H11V3.055z'/%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+    <div class="status-bar">
+        <span>15:25</span>
+        <span style="letter-spacing: 1px;">📶 🪫</span>
+    </div>
+
+    <div class="top-app-bar">
+        <div class="top-bar-container">
+            <div class="top-bar-left">
+                <button class="icon-btn" id="nav-action-btn" onclick="handleNavAction()">
+                    <div class="icon-menu" id="nav-icon"></div>
+                </button>
+                <div class="heading-1" id="app-title">Ask AI</div>
+            </div>
+            <div class="user-profile">D</div>
+        </div>
+    </div>
+
+    <div class="app-screen">
+        
+        <div class="page active" id="page-main">
+            <div class="search-input-section">
+                <div class="search-icon-left"></div>
+                <input type="text" class="search-input" id="search-input" value="Quantum physics and neural networks" placeholder="输入知识点或提问...">
+                <button class="clear-btn" onclick="clearSearch()">
+                    <div class="icon-arrow-right"></div>
+                </button>
+            </div>
+
+            <div class="native-results">
+                <div class="section-title">Search Results</div>
+                <div class="result-card" onclick="navigateToDetail('Quantum Mechanics & Computing', '量子计算模拟器应用实例。')">
+                    <div class="card-header">
+                        <div class="heading-3">Quantum Mechanics & Computing</div>
+                        <div class="icon-arrow-right" style="transform: scale(0.8);"></div>
+                    </div>
+                    <div class="card-body-text">Case studies on avian navigation and photosynthesis. Analyzing the role of...</div>
+                    <div class="card-footer">
+                        <div class="icon-time"></div>
+                        <span>2026-06-09</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="ai-results">
+                <div class="ai-header-badge">
+                    <div class="badge-tag">AI</div>
+                    <div class="badge-text">AI Generation Insights</div>
+                </div>
+                
+                <div class="space-wrapper" id="ai-cards-container" style="display: flex; flex-direction: column; gap:12px;">
+                    <div class="ai-result-card" onclick="navigateToDetail('Quantum Physics Meets AI', 'Quantum neural networks utilize the superposition states of quantum computing to increase model throughput exponentially.')">
+                        <div class="ai-icon-sparkle"></div>
+                        <div class="ai-card-content">
+                            <div class="heading-4">Quantum Physics Meets AI</div>
+                            <div class="ai-card-text">Quantum neural networks utilize the superposition states of quantum computing to increase model throughput exponentially.</div>
+                            <div class="ai-card-meta">Sources: Academic Deep Dive • 3 min read</div>
+                        </div>
+                    </div>
+
+                    <div class="ai-result-card" onclick="navigateToDetail('Optimization Algorithms', 'Applying gradient descent inside a simulated subatomic multi-dimensional grid framework.')">
+                        <div class="ai-icon-sparkle"></div>
+                        <div class="ai-card-content">
+                            <div class="heading-4">Optimization Algorithms</div>
+                            <div class="ai-card-text">Applying gradient descent inside a simulated subatomic multi-dimensional grid framework.</div>
+                            <div class="ai-card-meta">Sources: Reference Architecture • 5 min read</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="load-more-btn" id="load-more-btn" onclick="loadMoreResults()">
+                    <span id="load-more-text">Load More Results</span>
+                    <div class="icon-chevron-down" id="load-more-icon"></div>
+                </button>
+            </div>
+
+            <button class="fixed-action-btn" onclick="alert('即将为您开启全域自然语言深度检索问答模式！')">
+                <span>开启全屏自然语言检索</span>
+            </button>
+        </div>
+
+
+        <div class="page" id="page-detail">
+            <div class="ai-insight-section">
+                <div class="insight-top">
+                    <div class="insight-badge">AI INSIGHT</div>
+                    <div class="insight-meta">Concepts Identified</div>
+                </div>
+                <div class="insight-title">Key Concepts Identified</div>
+                <div class="card-body-text" id="detail-insight-summary">
+                    This note covers the backpropagation algorithm, gradient descent optimization, and activation functions. Would you like to see a visualization?
+                </div>
+            </div>
+
+            <div class="article-card">
+                <div class="article-title" id="detail-title">Neural Network Foundations</div>
+                <div class="article-paragraph" id="detail-body-text">
+                    At its core, a neural network is a mathematical framework designed to recognize patterns. It interprets sensory data through a kind of machine perception, labeling or clustering raw input.
+                </div>
+                
+                <div class="mock-diagram">
+                    <div class="icon-diagram"></div>
+                    <span>[ 神经网络与量子物理拓扑关系图 ]</span>
+                </div>
+
+                <div class="article-paragraph" style="font-size: 14px; color: #727786;">
+                    通过结合量子纠缠特性，新型处理架构能打破传统权重矩阵更新的极限速度。
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // 简易路由交互控制
+    const pageMain = document.getElementById('page-main');
+    const pageDetail = document.getElementById('page-detail');
+    const appTitle = document.getElementById('app-title');
+    const navIcon = document.getElementById('nav-icon');
+    const searchInput = document.getElementById('search-input');
+    const cardsContainer = document.getElementById('ai-cards-container');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const loadMoreText = document.getElementById('load-more-text');
+    const loadMoreIcon = document.getElementById('load-more-icon');
+
+    // 备用的“加载更多”卡片数据源
+    const mockMoreData = [
+        {
+            title: "Entanglement Layering",
+            desc: "How non-local correlations can reduce parameters in multi-head attention blocks.",
+            meta: "Sources: Quantum Lab Docs • 4 min read"
+        },
+        {
+            title: "Subatomic Grid Training",
+            desc: "A simulation protocol running neural node weight distribution patterns synchronously.",
+            meta: "Sources: AI & Physics Journal • 7 min read"
+        }
+    ];
+
+    let hasLoadedMore = false;
+
+    // 点击加载更多逻辑
+    function loadMoreResults() {
+        if (hasLoadedMore) return; // 避免重复加载
+
+        // 模拟平滑渲染新卡片
+        mockMoreData.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'ai-result-card';
+            // 转义字符串以防传参破损
+            const safeDesc = item.desc.replace(/'/g, "\\'");
+            card.setAttribute('onclick', `MapsToDetail('${item.title}', '${safeDesc}')`);
+            
+            card.innerHTML = `
+                <div class="ai-icon-sparkle"></div>
+                <div class="ai-card-content">
+                    <div class="heading-4">${item.title}</div>
+                    <div class="ai-card-text">${item.desc}</div>
+                    <div class="ai-card-meta">${item.meta}</div>
+                </div>
+            `;
+            cardsContainer.appendChild(card);
+        });
+
+        // 改变按钮状态
+        hasLoadedMore = true;
+        loadMoreBtn.classList.add('disabled');
+        loadMoreText.innerText = "All Results Loaded";
+        loadMoreIcon.style.display = "none";
+    }
+
+    // 导航至详情页
+    function navigateToDetail(title, text) {
+        document.getElementById('detail-title').innerText = title;
+        document.getElementById('detail-body-text').innerText = text;
+        document.getElementById('detail-insight-summary').innerText = `深入分析有关「${title}」的知识点。系统通过多模态策略为您提炼了核心资产，并匹配了跨范围的学术上下文。`;
+        
+        pageMain.classList.remove('active');
+        pageDetail.classList.add('active');
+        
+        // 变换标题栏状态
+        appTitle.innerText = "Insight Detail";
+        navIcon.className = "icon-back";
+    }
+
+    // 顶部按钮返回逻辑
+    function handleNavAction() {
+        if (navIcon.className === "icon-back") {
+            pageDetail.classList.remove('active');
+            pageMain.classList.add('active');
+            
+            appTitle.innerText = "Ask AI";
+            navIcon.className = "icon-menu";
+        } else {
+            alert("点击了主菜单");
+        }
+    }
+
+    // 清除搜索栏
+    function clearSearch() {
+        searchInput.value = "";
+        searchInput.focus();
+    }
+</script>
+
+</body>
+</html>
