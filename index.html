@@ -259,7 +259,7 @@
         }
         .content-scroll::-webkit-scrollbar { display: none; }
 
-        /* 脉冲动画 */
+        /* 脉冲动画 (ASK AI 按钮使用) */
         @keyframes softPulse {
             0% { box-shadow: 0 0 0 0 rgba(0, 86, 198, 0.2); border-color: rgba(0, 86, 198, 0.3); }
             50% { box-shadow: 0 0 0 4px rgba(0, 86, 198, 0.1); border-color: rgba(0, 86, 198, 0.6); }
@@ -267,6 +267,133 @@
         }
         .ask-ai-pulse {
             animation: softPulse 2s infinite;
+        }
+
+        /* 顶部按钮样式 */
+        .nav-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .nav-button:active {
+            background-color: #F5F5F5;
+            transform: scale(0.95);
+        }
+        .action-group {
+            display: flex;
+            background-color: #FFFFFF;
+            border-radius: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .action-button {
+            width: 48px;
+            height: 48px;
+            border: none;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .action-button:active {
+            background-color: #F5F5F5;
+            transform: scale(0.95);
+        }
+        /* 底部工具栏样式 - 固定在底部 */
+        .toolbar {
+            flex-shrink: 0;
+            padding: 16px 24px 20px;
+            background-color: #FFFFFF;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        .toolbar-inner {
+            background-color: #FFFFFF;
+            border-radius: 32px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 16px;
+        }
+        .toolbar-button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        .toolbar-button:active {
+            background-color: #F5F5F5;
+            transform: scale(0.95);
+        }
+        /* 内容区样式 */
+        .edit-title-input {
+            font-size: 24px;
+            font-weight: 500;
+            color: #9E9E9E;
+            line-height: 1.2;
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            padding: 0;
+            margin-bottom: 16px;
+        }
+        .edit-content-textarea {
+            font-size: 16px;
+            font-weight: 400;
+            color: #424242;
+            line-height: 1.5;
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            resize: none;
+            padding: 0;
+            min-height: 200px;
+        }
+        .edit-content-textarea::placeholder, .edit-title-input::placeholder {
+            color: #ccc;
+        }
+        /* 编辑页整体 Flex 布局 */
+        .edit-view-flex {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: #FFFFFF;
+        }
+        .edit-content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+        /* 顶部栏布局：左返回，中AI按钮，右按钮组 */
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+        }
+        .nav-center {
+            display: flex;
+            justify-content: right;
+            flex: 1;
         }
     </style>
 </head>
@@ -342,16 +469,102 @@
         <div id="searchResultContainer" class="p-4" style="height: calc(100% - 64px);"></div>
     </div>
 
-    <!-- 编辑页视图 -->
+    <!-- 笔记浏览页视图（独立 AI 按钮） -->
     <div id="editView" class="page hidden">
-        <div class="sticky top-0 bg-background px-4 py-3 flex items-center justify-between border-b border-gray-200">
-            <button id="backFromEdit" class="w-8 h-8 flex items-center justify-center"><i class="fa fa-arrow-left text-dark text-xl"></i></button>
-            <span class="font-semibold text-lg">编辑笔记</span>
-            <button id="aiButtonInEdit" class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center"><i class="fa fa-magic text-primary"></i></button>
-        </div>
-        <div class="p-4">
-            <input type="text" id="editTitle" class="w-full text-2xl font-bold mb-3 bg-transparent border-none outline-none" placeholder="标题">
-            <textarea id="editContent" class="w-full h-64 text-secondary bg-transparent border-none outline-none resize-none" placeholder="写点什么..."></textarea>
+        <div class="edit-view-flex">
+            <!-- 顶部导航栏：左返回，中 AI 按钮（独立），右按钮组 -->
+            <div class="nav-bar">
+                <!-- 左侧返回按钮 -->
+                <button id="backFromEdit" class="nav-button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                
+                <!-- 中间独立 AI 按钮（圆形白色卡片） -->
+                <div class="nav-center">
+                    <button id="aiNavButton" class="nav-button">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0056c6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            <path d="M8 10h.01" />
+                            <path d="M12 10h.01" />
+                            <path d="M16 10h.01" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- 右侧按钮组：分享、皮肤、更多 -->
+                <div class="action-group">
+                    <button id="shareBtn" class="action-button">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                    </button>
+                    <button id="themeBtn" class="action-button">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>
+                        </svg>
+                    </button>
+                    <button id="moreBtn" class="action-button">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 可滚动的内容区域 -->
+            <div class="edit-content-scroll">
+                <input id="editTitle" class="edit-title-input" placeholder="标题" value="标题">
+                <textarea id="editContent" class="edit-content-textarea" placeholder="开始记录"></textarea>
+            </div>
+
+            <!-- 底部工具栏 (固定) -->
+            <div class="toolbar">
+                <div class="toolbar-inner">
+                    <button class="toolbar-button" id="toolbarCamera">
+                        <svg width="28" height="24" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                    </button>
+                    <button class="toolbar-button" id="toolbarPen">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                            <path d="M2 2l7.586 7.586"></path>
+                            <circle cx="11" cy="11" r="2"></circle>
+                        </svg>
+                    </button>
+                    <button class="toolbar-button" id="toolbarCheck">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
+                    <button class="toolbar-button" id="toolbarList">
+                        <svg width="28" height="24" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                    </button>
+                    <button class="toolbar-button" id="toolbarKeyboard">
+                        <svg width="24" height="20" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -566,13 +779,7 @@
         html += `</div></div>`;
 
         html += `<div class="mt-6 flex justify-center"><button id="loadMoreBtn" class="group flex items-center gap-2 px-5 py-2.5 text-primary text-sm font-medium hover:bg-surface-container-low rounded-xl transition-all active:scale-95"><span class="material-symbols-outlined text-sm group-hover:rotate-180 transition-transform duration-500 inline-block">expand_more</span> Load more AI results</button></div>`;
-
-        // 修改后的 ASK AI 按钮：宽度适中、居中、更好的垂直内边距
-        html += `<div class="mt-8 flex justify-center">
-            <button id="askAiBtn" class="ask-ai-pulse w-56 py-3 px-6 bg-surface-container-lowest/60 backdrop-blur-md text-primary rounded-xl flex items-center justify-center gap-3 border border-primary/30 transition-all duration-500 active:scale-95 group">
-                <span class="font-headline-md font-medium tracking-widest uppercase text-sm">ASK AI</span>
-            </button>
-        </div>`;
+        html += `<div class="mt-8 flex justify-center"><button id="askAiBtn" class="ask-ai-pulse w-56 py-3 px-6 bg-surface-container-lowest/60 backdrop-blur-md text-primary rounded-xl flex items-center justify-center gap-3 border border-primary/30 transition-all duration-500 active:scale-95 group"><span class="font-headline-md font-medium tracking-widest uppercase text-sm">ASK AI</span></button></div>`;
 
         searchResultContainer.innerHTML = html;
 
@@ -625,19 +832,39 @@
     searchResultInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { const kw = searchResultInput.value.trim(); renderSearchResults(kw); } });
     document.getElementById('backFromSearch').addEventListener('click', () => showView(homeView));
 
+    // 笔记点击进入浏览页
     const noteItems = document.querySelectorAll('.note-item');
+    const editTitleInput = document.getElementById('editTitle');
+    const editContentTextarea = document.getElementById('editContent');
     noteItems.forEach(item => {
         item.addEventListener('click', () => {
-            const title = item.getAttribute('data-note-title') || '无标题';
+            const title = item.getAttribute('data-note-title') || '';
             const content = item.getAttribute('data-note-content') || '';
-            document.getElementById('editTitle').value = title;
-            document.getElementById('editContent').value = content;
+            editTitleInput.value = title;
+            editContentTextarea.value = content;
             showView(editView);
         });
     });
-    document.getElementById('backFromEdit').addEventListener('click', () => showView(homeView));
-    document.getElementById('aiButtonInEdit').addEventListener('click', openSheet);
 
+    // 浏览页返回按钮
+    document.getElementById('backFromEdit').addEventListener('click', () => showView(homeView));
+    // 独立 AI 按钮点击打开问答助手
+    const aiNavButton = document.getElementById('aiNavButton');
+    if (aiNavButton) aiNavButton.addEventListener('click', openSheet);
+
+    // 分享、皮肤、更多按钮功能示例
+    document.getElementById('shareBtn').addEventListener('click', () => alert('分享笔记'));
+    document.getElementById('themeBtn').addEventListener('click', () => alert('更换皮肤/主题'));
+    document.getElementById('moreBtn').addEventListener('click', () => alert('更多操作'));
+
+    // 底部工具栏按钮功能示例
+    const toolbarButtons = ['toolbarCamera', 'toolbarPen', 'toolbarCheck', 'toolbarList', 'toolbarKeyboard'];
+    toolbarButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.addEventListener('click', () => alert(`${id} 功能开发中`));
+    });
+
+    // AI 对话逻辑
     function addMessage(text, isUser) {
         const msgDiv = document.createElement('div');
         msgDiv.className = `chat-message ${isUser ? 'user-message' : 'assistant-message'}`;
